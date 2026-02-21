@@ -1,0 +1,45 @@
+import telebot
+bot = telebot.TeleBot("8557630617:AAG6qKoHAjsjOhBoqzE3TSTSivSqX50zJs4")
+
+notes = {}
+
+@bot.message_handler(commands=["start"])
+def start(message):
+    bot.send_message(
+        message.chat.id,
+        "Привет! Я бот для заметок 📝\n"
+        "/save <текст> — сохранить заметку\n"
+        "/notes — показать заметки\n"
+        "/clear — удалить все заметки"
+    )
+
+@bot.message_handler(commands=["save"])
+def save_note(message):
+    text = message.text.replace("/save", "").strip()
+    if not text:
+        bot.send_message(message.chat.id, "Напиши текст заметки после команды.")
+        return
+
+    user_id = message.chat.id
+    notes.setdefault(user_id, []).append(text)
+    bot.send_message(message.chat.id, "Заметка сохранена ✅")
+
+@bot.message_handler(commands=["notes"])
+def show_notes(message):
+    user_id = message.chat.id
+    if user_id not in notes or not notes[user_id]:
+        bot.send_message(message.chat.id, "У тебя нет заметок.")
+        return
+
+    result = "Твои заметки:\n"
+    for i, note in enumerate(notes[user_id], 1):
+        result += f"{i}. {note}\n"
+
+    bot.send_message(message.chat.id, result)
+
+@bot.message_handler(commands=["clear"])
+def clear_notes(message):
+    notes[message.chat.id] = []
+    bot.send_message(message.chat.id, "Все заметки удалены 🗑")
+
+bot.polling()
